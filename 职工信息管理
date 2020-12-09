@@ -1,0 +1,935 @@
+/********************************头文件调用*********************************************/
+ 
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "conio.h"
+ 
+/********************************结构体声明*********************************************/
+ 
+/********************************职工信息结构体*****************************************/
+struct Employee;                         //职工信息结构体声明
+typedef struct Employee *PtrToNode;      //结构体指针定义                
+typedef PtrToNode List;                  //链表头指针定义
+typedef PtrToNode Position;              //链表结点指针定义 
+ 
+/********************************职称结构体*****************************************/
+struct Title;                            //职称结构体声明
+typedef struct Title *PtrToTitle;        //结构体指针定义                
+ 
+/********************************函数声明************************************************/
+ 
+/********************************链表函数声明********************************************/
+ 
+List MakeEmpty(List L);                         //空链表创建函数
+int IsEmpty(List L);                            //判断空链表函数
+int IsLast(Position P,List L);                  //判断链尾函数
+void DeleteList(List L);                        //链表删除函数
+Position FindNumPrevious(int number,List L);    //职工号前驱指针查找函数 
+Position FindNamePrevious(char name[],List L);  //职工姓名前驱指针查找函数 
+List Sort(List L);                              //链表冒泡排序函数
+ 
+PtrToTitle MakeEmptyTitle(PtrToTitle L1);           //空职称链表创建函数
+PtrToTitle InsertTitle(char t[20],PtrToTitle L1);   //职称插入函数
+ 
+/********************************文件函数声明********************************************/
+ 
+List Init(List L);                 //初始化函数
+void Save(List L);                 //信息保存函数
+void MakeFileEmpty();              //清空文件函数
+ 
+/********************************菜单函数声明********************************************/
+ 
+void MainMeun();                   //主菜单
+void ViewMeun();                   //显示菜单
+void EmployeeMeun();               //职工信息显示菜单
+void ModMeun();                    //修改菜单
+void ModMeun1();                   //修改的部分菜单
+void ModMeun();                    //删除菜单
+   
+/********************************职工管理函数声明********************************************/
+ 
+void Add(List L);                  //信息录入函数
+ 
+void View(List L);                 //信息显示函数
+void ViewNum(List L);              //职工号显示函数
+void ViewName(List L);             //职工号显示函数
+void ViewEmployee(List L);         //职工信息显示函数
+void ViewDepartment(List L);       //部门信息显示函数
+void ViewTime(List L);             //入厂时间显示函数
+ 
+void Mod(List L);                       //信息修改函数
+void Mod1(Position P,List L);           //修改的部分函数
+void ModNum(Position P,List L);         //职工号修改函数
+void ModName(Position P,List L);        //职工姓名修改函数
+void ModDepartment(Position P,List L);  //工作部门修改函数
+void ModTitle(Position P,List L);       //职工职称修改函数
+void ModTime(Position P,List L);        //入厂时间修改函数
+void Modmoney(Position P,List L);       //职工工资修改函数
+ 
+void Delete(List L);               //职工号删除函数
+void DeleteNum(List L);            //职工号删除函数
+void DeleteName(List L);           //职工姓名删除函数
+ 
+void PrintEmployee(Position P);    //职工信息打印函数
+ 
+void TurnBack();                   //返回上一菜单函数
+char Test1(char a,char b,char c);  //菜单输入检测函数
+ 
+/*********************************结构体定义***********************************************/
+ 
+//职工信息结构体
+struct Employee           
+{
+	int num;               //职工号
+	char name[20];         //姓名
+	char department[20];   //工作部门
+	char Title[20];        //职称
+	char time[10];         //入厂时间  年/月/日  2018/6/29   
+	int money;             //工资
+	Position Next;         //Next指针 (指向下一结构体)
+};
+ 
+//职称结构体
+struct Title
+{
+	char title[20];       //职称名称
+	int num;              //部门职称人数
+	struct Title* Next;   //Next指针
+};
+ 
+/*********************************函数定义**************************************************/
+ 
+/*********************************主函数**************************************************/
+ 
+int main()
+{
+	List L=NULL;
+	char a;
+	L=Init(L);
+	printf("\n\t\t输入回车键继续");
+	getchar();
+	while(1)
+	{
+		system("cls");                      //实现清屏
+		MainMeun();                         //调用 主菜单显示函数
+		fflush(stdin);                      //清除键盘缓冲区
+		a=Test1(getchar(),'1','7');         //菜单输入检测函数
+		switch(a)
+		{
+		case '1':  system("cls");  Add(L);           break;                    //调用 信息录入函数
+		case '2':  system("cls");  View(L);          break;                    //调用 信息显示函数   
+		case '3':  system("cls");  Mod(L);           break;                    //调用 信息修改函数
+		case '4':  system("cls");  Delete(L);        break;                    //调用 信息删除函数
+		case '5':  system("cls");  Save(L);          system("pause");  break;  //调用 信息保存函数
+		case '6':  system("cls");  MakeFileEmpty();  break;                    //调用 信息删除函数
+		case '7':  return 0;                                                   //退出系统
+		}
+	}
+	return 0;
+}
+ 
+/*********************************链表函数**********************************************/
+ 
+//空链表创建函数
+List MakeEmpty(List L)                         
+{
+	if(L)                                      //相当于 if(L!=NULL) ,即指针L指向的空间不为空
+		DeleteList( L );                       //删除原先链表
+	L=(List)malloc(sizeof(struct Employee));   //创建新的空链表
+	if(!L)                                     //相当于 if(L==NULL) ,即指针L指向的空间为空
+	{
+		printf("创建失败,内存不足!!!");        //创建失败，提示内存不足
+		system("pause");                       //暂停屏幕显示
+		return NULL;                           //返回上一级菜单
+	}
+	L->Next=NULL;                              //Next指针指向空
+	return L;                                  //返回链表头
+}
+ 
+//空职称链表创建函数
+struct Title *MakeEmptyTitle(struct Title *L1)                         
+{
+	if(L1)                                      //相当于 if(L!=NULL) ,即指针L指向的空间不为空
+	{
+		struct Title *P;
+		P=L1->Next;           //取链表头后的所有结点
+		L1->Next=NULL;        //链表头指向空结点
+		while(P!=NULL)       //依次释放链表头后所有结点的空间
+		{
+			free(P);
+			P=P->Next;
+		}
+	}
+	L1=(struct Title *)malloc(sizeof(struct Title));   //创建新的空链表
+	if(!L1)                                     //相当于 if(L==NULL) ,即指针L指向的空间为空
+	{
+		printf("创建失败,内存不足!!!");        //创建失败，提示内存不足
+		system("pause");                       //暂停屏幕显示
+		return NULL;                           //返回上一级菜单
+	}
+	L1->Next=NULL;                              //Next指针指向空
+	return L1;                                  //返回链表头
+}
+ 
+//职称插入函数
+PtrToTitle InsertTitle(char t[20],PtrToTitle L1)
+{
+	PtrToTitle P,TmpCell;
+	if(L1->Next==NULL)                         //如果职称链表为空,则直接创建结点
+	{
+		TmpCell=(PtrToTitle)malloc(sizeof(struct Title));
+		if(TmpCell==NULL)
+			printf("\n超出空间!!!\n\n");
+		else                                   //将新建结点插入链表
+		{
+			strcpy(TmpCell->title,t);
+			TmpCell->Next=L1->Next;
+			L1->Next=TmpCell;
+			TmpCell->num=1;
+		}
+	}
+	else
+	{
+		P=L1->Next;
+		while(P!=NULL&&strcmp(P->title,t)!=0)
+			P=P->Next;
+		if(P==NULL)
+		{
+			TmpCell=(PtrToTitle)malloc(sizeof(struct Title));
+			if(TmpCell==NULL)
+				printf("\n超出空间!!!\n\n");
+			else                                   //将新建结点插入链表
+			{
+				strcpy(TmpCell->title,t);
+				TmpCell->Next=L1->Next;
+				L1->Next=TmpCell;
+				TmpCell->num=1;
+			}
+		}
+		else
+			P->num++;
+	}
+	return L1;
+}
+ 
+//判断空链表函数
+int IsEmpty(List L)             
+{
+	return L->Next==NULL;       //头结点的Next指针为空，则链表为空，返回值为1
+}
+ 
+//判断链尾函数
+int IsLast(Position P,List L)   
+{
+	return P->Next==NULL;       //结点P的Next指针为空，则P为最后一个结点，返回值为1
+}
+ 
+//链表删除函数
+void DeleteList(List L)   
+{
+	Position P;
+	P=L->Next;           //取链表头后的所有结点
+	L->Next=NULL;        //链表头指向空结点
+	while(P!=NULL)       //依次释放链表头后所有结点的空间
+	{
+		free(P);
+		P=P->Next;
+	}
+}
+ 
+//职工号前驱指针查找函数 
+Position FindNumPrevious(int number,List L)       
+{
+	Position P;
+    P=L;
+    while(P->Next!=NULL&&P->Next->num!=number)  //判断P的Next指针是否为空，且P的下一个结点的职工号是否为查找的职工号
+		P=P->Next;                              //查找下一个
+	return P;                                   //返回该职工号的前驱指针
+}
+ 
+//职工姓名前驱指针查找函数 
+Position FindNamePrevious(char name[],List L)       
+{
+	Position P;
+    P=L;
+    while(P->Next!=NULL&&strcmp(name,P->Next->name)!=0)  //判断P的Next指针是否为空，且P的下一个结点的职工姓名是否为查找的职工姓名
+		P=P->Next;                                       //查找下一个
+	return P;                                            //返回该职工号的前驱指针
+}
+ 
+//链表冒泡排序函数
+List Sort(List L)
+{
+    Position P,Tmp1,Tmp2;
+	int i,j,num=0;
+	P=L->Next;
+	while(P!=NULL)   //获取总人数
+	{
+		num++;
+		P=P->Next;
+	}
+    for(j=0;j<num-1;j++)  //通过总人数控制循环
+    {
+		P=L;
+		Tmp1=P->Next;
+		Tmp2=Tmp1->Next;
+        for(i=0;i<num-1-j;i++)
+        {
+            if(Tmp1->num>Tmp2->num)   //升序
+            {
+                Tmp1->Next=Tmp2->Next;
+                P->Next=Tmp2;
+                Tmp2->Next=Tmp1;
+            }
+			P=P->Next;
+			Tmp1=P->Next;
+			Tmp2=Tmp1->Next;
+        }
+    }
+    return L;  
+ }
+ 
+/*********************************文件函数**************************************************/
+ 
+//初始化函数
+ 
+List Init(List L)            
+{
+	FILE *fp;                                               //文件指针
+	Position TmpCell;
+	int num=0;
+	if((fp=fopen("职工信息.txt","r+"))==NULL)                //打开"职工信息.txt"文本文件
+	{
+		printf("\n\t\t无法打开文件或文件不存在\n");         //提示错误
+		printf("\n\t\t正在尝试创建新文件....\n");
+		fp=fopen("职工信息.txt","w");                       //创建"职工信息.txt"文本文件
+		if((fp=fopen("职工信息.txt","r+"))==NULL)           //再次打开判断是否成功
+		{
+			printf("\t\t文件创建失败!!!\n");
+			system("pause");                                //暂停屏幕显示
+			return NULL;
+		}
+	}
+	fp=fopen("职工信息.txt","r+");                           //以只读的方式打开"职工信息.txt"文本文件
+	L=MakeEmpty(L);                                         //创建链表，以便存储文本文件中的信息
+	while(1)                                                //将磁盘中的信息输出到内存中
+	{
+		TmpCell=(Position)malloc(sizeof(struct Employee));  //创建新结点
+		if(TmpCell==NULL)
+		{
+			printf("文件信息读取失败,系统内存不足!!!\n");   //添加失败，提示内存不足
+			system("pause");                                //暂停屏幕显示
+			return NULL;                                    //返回上一级菜单
+		}
+		if(fscanf(fp,"%d %s %s %s %s %d",&TmpCell->num,TmpCell->name,TmpCell->department,TmpCell->Title,TmpCell->time,&TmpCell->money)<0) 
+			break;  //将文件信息写入内存
+		TmpCell->Next=L->Next;                              //将结点TmpCell插入到链表中
+		L->Next=TmpCell;                                     
+		num++;
+	} 
+	printf("\n\t\t职工信息读取完成!!!\n");
+	printf("\n\t\t目前共有 %d 名职工信息\n",num);
+	fclose(fp);                                             //关闭文件
+	return L;
+}
+ 
+//信息保存函数 
+void Save(List L)        
+{
+	FILE *fp;                                           //文件指针
+	Position P;
+	L=Sort(L);                                            //调用链表冒泡排序函数
+	P=L;
+	if((fp=fopen("职工信息.txt","w+"))==NULL)           //打开"职工信息.txt"文本文件
+	{
+		printf("无法打开文件!!!\n");
+		system("pause");                                //暂停屏幕显示
+		return;
+	}
+	fp=fopen("职工信息.txt","w+");                      //以读写的方式打开"职工信息.txt"文本文件
+	while(P->Next!=NULL)                                //将内存中的数据输出到磁盘中
+	{
+		P=P->Next;                                      //信息从第一个有效结点开始保存,循环指向下一个有效结点
+		if(fprintf(fp,"%d %s %s %s %s %d\n",P->num,P->name,P->department,P->Title,P->time,P->money)<0) 
+			break;  //向文件写入信息
+	}
+	printf("\n职工信息保存成功!!!\n\n");
+	fclose(fp);
+	return;
+}
+ 
+//清空文件函数
+void MakeFileEmpty()
+{
+	FILE *fp;                                       //文件指针
+	if((fp=fopen("职工信息.txt","w+"))==NULL)       //新建"职工信息.txt"文本文件
+	{
+		printf("无法打开文件!!!\n");
+		system("pause");                            //暂停屏幕显示
+        return;
+	}
+	printf("\n文件信息清空完毕!!!\n\n");
+	TurnBack();
+	return;
+}
+ 
+ 
+/*********************************菜单函数**************************************************/
+ 
+//主菜单
+void MainMeun()  
+{
+	printf("\n\t\t                主菜单");
+	printf("\n\t\t*******************************************");
+	printf("\n\t\t*             1、信息录入                 *");
+	printf("\n\t\t*             2、信息显示                 *");
+	printf("\n\t\t*             3、信息修改                 *");
+	printf("\n\t\t*             4、信息删除                 *");
+	printf("\n\t\t*             5、信息保存                 *");
+	printf("\n\t\t*             6、信息清空                 *");
+	printf("\n\t\t*             7、退出系统                 *");
+	printf("\n\t\t*******************************************");
+	printf("\n\n\t\t\t请输入您的选择:");
+}
+ 
+//显示菜单
+void ViewMeun()  
+{
+	printf("\n\t\t                 显示菜单");
+	printf("\n\t\t********************************************");
+	printf("\n\t\t*            1、职工信息显示               *");
+	printf("\n\t\t*            2、部门信息显示               *");
+	printf("\n\t\t*            3、入厂时间显示               *");
+	printf("\n\t\t*            4、返回到主菜单               *");
+	printf("\n\t\t********************************************");
+	printf("\n\n\t\t\t请输入您的选择:");
+}
+ 
+//职工信息显示菜单
+void EmployeeMeun()  
+{
+	printf("\n\t\t             职工信息显示菜单");
+	printf("\n\t\t********************************************");
+	printf("\n\t\t*            1、职工号查询                 *");
+	printf("\n\t\t*            2、职工姓名查询               *");
+	printf("\n\t\t*            3、返回显示菜单               *");
+	printf("\n\t\t********************************************");
+	printf("\n\n\t\t\t请输入您的选择:");
+}
+ 
+ 
+//修改菜单
+void ModMeun()  
+{
+	printf("\n\t\t                 修改菜单");
+	printf("\n\t\t********************************************");
+	printf("\n\t\t*            1、职工号查询修改             *");
+	printf("\n\t\t*            2、职工姓名查询修改           *");
+	printf("\n\t\t*            3、返回到主菜单               *");
+	printf("\n\t\t********************************************");
+	printf("\n\n\t\t\t请输入您的选择:");
+}
+ 
+//修改的部分菜单
+void ModMeun1()  
+{
+	printf("\n\t\t             所要修改的部分");
+	printf("\n\t\t********************************************");
+	printf("\n\t\t*            1、职工号                     *");
+	printf("\n\t\t*            2、职工姓名                   *");
+	printf("\n\t\t*            3、工作部门                   *");
+	printf("\n\t\t*            4、职称                       *");
+	printf("\n\t\t*            5、入厂时间                   *");
+	printf("\n\t\t*            6、工资                       *");
+	printf("\n\t\t*            7、返回上一菜单               *");
+	printf("\n\t\t********************************************");
+	printf("\n\n\t\t\t请输入您的选择:");
+}
+ 
+//删除菜单
+void DeleteMeun()  
+{
+	printf("\n\t\t                 删除菜单");
+	printf("\n\t\t********************************************");
+	printf("\n\t\t*            1、职工号查询删除             *");
+	printf("\n\t\t*            2、职工姓名查询删除           *");
+	printf("\n\t\t*            3、返回到主菜单               *");
+	printf("\n\t\t********************************************");
+	printf("\n\n\t\t\t请输入您的选择:");
+}
+ 
+/*********************************职工管理函数**************************************************/
+ 
+/*********************************录入函数**********************************************/
+ 
+//信息录入函数
+void Add(List L)           
+{
+	Position TmpCell;
+	int number;
+	char n[20];
+	printf("\n请输入所要创建的职工号:  ");                         //提示输入职工号
+	scanf("%d",&number);                                
+	if(!IsLast(FindNumPrevious(number,L),L))             //连续调用 职工号前驱指针查找函数 判断链尾函数,判断该职工号是否已存在
+	{
+		printf("\n职工号 %d 已存在!!!\n\n",number);
+		TurnBack();                                      //调用返回上一菜单函数
+		return;                                          //退出并返回上一级菜单
+	}
+	printf("\n请输入该职工的姓名:  ");                       //保存职工姓名
+	scanf("%s",n);                           
+	if(!IsLast(FindNamePrevious(n,L),L))     //连续调用 职工姓名前驱指针查找函数 判断链尾函数,判断该职工姓名是否已存在
+	{
+		printf("\n职工姓名 %s 已存在!!!\n\n",n);
+		TurnBack();                                      //调用返回上一菜单函数
+		return;                                          //退出并返回上一级菜单
+	}
+	TmpCell=(Position)malloc(sizeof(struct Employee));   //创建新结点
+	if(TmpCell==NULL)
+	{
+		printf("\n添加失败,内存不足!!!\n\n");                  //添加失败，提示内存不足
+		system("pause");                                 //暂停屏幕显示
+		return;                                          //返回上一级菜单
+	}
+	TmpCell->num=number;                                 //保存职工号
+	strcpy(TmpCell->name,n);                             //保存姓名
+	printf("\n请输入该职工的工作部门:  ");                   //保存工作部门
+	scanf("%s",TmpCell->department);
+	printf("\n请输入该职工的职称:  ");                       //保存职称
+	scanf("%s",TmpCell->Title);  
+	printf("\n请输入该职工的入厂时间(格式为:年/月/日):  ");  //保存入厂时间
+	scanf("%s",TmpCell->time);                         
+	printf("\n请输入该职工的工资(单位:元):  ");              //保存工资
+	scanf("%d",&TmpCell->money);   
+	TmpCell->Next=L->Next;                               //将结点TmpCell插入到链表中
+	L->Next=TmpCell;                                     
+	printf("\n职工 %s 的信息创建成功!!!\n",TmpCell->name);   //提示创建成功
+	Save(L);                                             //调用 信息保存函数
+	TurnBack();                                          //调用 返回上一菜单函数
+	return;                                              //退出并返回上一级菜单
+}
+ 
+/*********************************显示函数**********************************************/
+ 
+//信息显示函数
+void View(List L)          
+{
+	while(1)
+	{
+		char a;
+        system("cls");                   //实现清屏
+		ViewMeun();                      //调用显示菜单
+		fflush(stdin);                   //清除键盘缓冲区
+		a=Test1(getchar(),'1','4');      //调用菜单输入检测函数
+		switch(a)
+		{
+		case '1':	system("cls");  ViewEmployee(L);   break;  //职工信息显示
+		case '2':	system("cls");  ViewDepartment(L); break;  //部门信息显示
+		case '3':	system("cls");  ViewTime(L);       break;  //入厂时间显示
+		case '4':	return;
+		}
+	}
+}
+ 
+//职工信息显示函数
+void ViewEmployee(List L)
+{
+	while(1)
+	{
+		char a;
+        system("cls");                   //实现清屏
+		EmployeeMeun();                  //调用职工信息显示菜单
+		fflush(stdin);                   //清除键盘缓冲区
+		a=Test1(getchar(),'1','3');       //调用菜单输入检测函数
+		switch(a)
+		{
+		case '1':  system("cls");  ViewNum(L);   break;     //职工信息显示
+		case '2':  system("cls");  ViewName(L);  break;     //部门信息显示
+		case '3':  return;
+		}
+	}
+}
+ 
+//职工号显示函数
+void ViewNum(List L)
+{
+	Position P;
+	int number;
+	printf("\n请输入所要查询的职工号:  ");
+	scanf("%d",&number);
+	P=FindNumPrevious(number,L);	 //调用职工号前驱指针查找函数,获得所需显示结点的前一结点
+	if(IsLast(P,L)==1)               //判断是否存在该员工
+		printf("\n无职工号为 %d 的员工!!!\n\n",number);
+	else
+		PrintEmployee(P->Next);      //调用职工信息打印函数
+	TurnBack();                      //调用返回上一菜单函数
+	return;                          //返回上一菜单
+}
+ 
+//职工姓名显示函数
+void ViewName(List L)
+{
+	Position P;
+	char name[20];
+	printf("请输入所要查询的职工姓名:  ");
+	scanf("%s",name);
+	P=FindNamePrevious(name,L);	    //调用职工号前驱指针查找函数,获得所需显示结点的前一结点
+	if(IsLast(P,L))                 //判断是否存在该员工
+		printf("\n无姓名为 %s 的员工!!!\n\n",name);
+	else
+		PrintEmployee(P->Next);     //调用职工信息打印函数
+	TurnBack();                     //调用返回上一菜单函数
+	return;                         //返回上一菜单
+}
+ 
+//部门信息显示函数
+void ViewDepartment(List L)
+{
+	Position P;
+	PtrToTitle P1,L1;
+	char c[20];
+	int num,money;
+	L1=NULL;
+	L1=MakeEmptyTitle(L1);                   //调用职称链表创建函数
+	num=money=0;
+	printf("请输入所要查询的部门名称:  ");
+	scanf("%s",c);
+	P=L->Next;
+	while(P!=NULL&&strcmp(c,P->department)!=0)
+		P=P->Next;
+	if(P==NULL)
+	{
+		printf("\n无名称为 %s 的部门\n\n",c);
+		TurnBack();                          //调用返回上一菜单函数
+		return;
+	}
+	printf("\n该部门职工信息如下:\n");
+	printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	printf("  职工号        姓名            工作部门        职称            入厂时间               工资      \n"); 
+	printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	P=L->Next;
+	while(P!=NULL)
+	{
+		if(strcmp(c,P->department)==0)
+		{
+			printf("   %-d\t\t%-s\t\t%-s\t\t%-s\t\t%-s\t\t%-d\n",P->num,P->name,P->department,P->Title,P->time,P->money);
+			L1=InsertTitle(P->Title,L1);
+			num++;
+			money+=P->money;
+		}
+		P=P->Next;
+	}
+	printf("\n\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	printf("该部门的统计情况如下:\n 总人数为: %d 人\n 平均工资为: %.2f 元\n",num,(float)money/num);
+	P1=L1->Next;
+	while(P1!=NULL)
+	{
+		printf(" 职称为 %s 的共:  %d 人\n",P1->title,P1->num);
+		P1=P1->Next;
+	}
+	putchar('\n');
+	TurnBack();                               //调用返回上一菜单函数
+	return;                                   //退出并返回上一级菜单
+}
+ 
+//入厂时间显示函数
+void ViewTime(List L)
+{
+	Position P;
+	char time[20];
+	printf("请输入所要查询的入厂时间:  ");
+	scanf("%s",time);
+	P=L->Next;
+	while(P!=NULL&&strcmp(time,P->time)!=0)
+		P=P->Next;
+	if(P==NULL)
+	{
+		printf("无入厂时间为 %s 的员工\n\n",time);
+		TurnBack();                //调用 返回上一菜单函数
+		return;
+	}
+	printf("\n该部门职工信息如下:\n");
+	printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	printf("  职工号        姓名            工作部门        职称            入厂时间               工资      \n"); 
+	printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	P=L->Next;
+	while(P!=NULL)
+	{
+		if(strcmp(time,P->time)==0)
+			printf("   %-d\t\t%-s\t\t%-s\t\t%-s\t\t%-s\t\t%-d\n",P->num,P->name,P->department,P->Title,P->time,P->money);
+		P=P->Next;
+	}
+	printf("\n\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	TurnBack();                    //调用 返回上一菜单函数
+    return;
+}
+ 
+/*********************************修改函数**********************************************/
+ 
+//信息修改函数
+void Mod(List L)          
+{
+	while(1)
+	{
+		char a;
+		Position P;
+        system("cls");                    //实现清屏
+		ModMeun();                        //调用修改菜单
+		fflush(stdin);                    //清除键盘缓冲区
+		a=Test1(getchar(),'1','3');       //调用菜单输入检测函数
+		switch(a)
+		{
+		case '1':                         //职工号修改
+			{
+				int number;
+				system("cls");  
+				printf("\n请输入所要修改的职工信息的职工号:  ");
+				scanf("%d",&number);
+				P=FindNumPrevious(number,L);	 //调用职工号前驱指针查找函数,获得所需显示结点的前一结点
+				if(IsLast(P,L)==1)               //判断是否存在该员工
+				{
+					printf("\n无职工号为 %d 的员工!!!\n\n",number);
+					TurnBack();                      //调用返回上一菜单函数
+				}
+				else
+					Mod1(P->Next,L);     //调用修改的部分函数
+				break;                   //返回上一菜单
+			}
+		case '2':                        //职工姓名修改
+			{
+				char name[20];
+				printf("请输入所要修改的职工信息的职工姓名:  ");
+				scanf("%s",name);
+				P=FindNamePrevious(name,L);	    //调用职工号前驱指针查找函数,获得所需显示结点的前一结点
+				if(IsLast(P,L))                 //判断是否存在该员工
+				{
+					printf("\n无姓名为 %s 的员工!!!\n\n",name);
+				    TurnBack();                      //调用返回上一菜单函数
+				}
+				else
+					Mod1(P->Next,L);
+				break;                           //返回上一菜单
+			}
+		case '3':	return;
+		}
+	}
+}
+ 
+//修改的部分函数
+void Mod1(Position P,List L)          
+{
+	while(1)
+	{
+		char a;
+		PrintEmployee(P);		          //调用职工信息打印函数     
+		ModMeun1();                       //调用修改菜单
+		fflush(stdin);                    //清除键盘缓冲区
+		a=Test1(getchar(),'1','7');       //调用菜单输入检测函数
+		switch(a)
+		{
+		case '1': system("cls");  ModNum(P,L);         break;  //职工号修改
+		case '2': system("cls");  ModName(P,L);        break;  //职工姓名修改
+		case '3': system("cls");  ModDepartment(P,L);  break;  //工作部门修改
+		case '4': system("cls");  ModTitle(P,L);       break;  //职工职称修改
+		case '5': system("cls");  ModTime(P,L);        break;  //入厂时间修改
+		case '6': system("cls");  Modmoney(P,L);       break;  //职工工资修改
+		case '7': return;
+		}
+	}
+}
+ 
+//职工号修改函数
+void ModNum(Position P,List L)
+{
+	int b;       
+	printf("\n请输入新的职工号:  ");    
+	scanf("%d",&b);  
+	if(!IsLast(FindNumPrevious(b,L),L))     //连续调用 职工号前驱指针查找函数 判断链尾函数,判断该职工号是否已存在
+		printf("\n职工号 %d 已存在!!!\n\n",b);
+	else
+	{
+		P->num=b;           
+		Save(L);         //调用信息保存函数
+	}
+	TurnBack();          //调用返回上一菜单函数
+	return;              //退出并返回上一级菜单
+}
+ 
+//职工姓名修改函数
+void ModName(Position P,List L)
+{
+	char c[20]; 
+	printf("\n请输入新的职工姓名:  ");  
+	scanf("%s",c);   
+	if(!IsLast(FindNamePrevious(c,L),L))     //连续调用 职工姓名前驱指针查找函数 判断链尾函数,判断该职工姓名是否已存在
+		printf("\n职工姓名 %s 已存在!!!\n\n",c);
+	else
+	{
+		strcpy(P->name,c);           
+		Save(L);         //调用信息保存函数
+	}
+	TurnBack();          //调用返回上一菜单函数
+	return;              //退出并返回上一级菜单
+}
+ 
+//工作部门修改函数
+void ModDepartment(Position P,List L)
+{
+	char c[20]; 
+	printf("\n请输入新的工作部门:  ");  
+	scanf("%s",c);   
+	strcpy(P->department,c);           
+	Save(L);             //调用信息保存函数
+	TurnBack();          //调用返回上一菜单函数
+	return;              //退出并返回上一级菜单
+}
+ 
+//职工职称修改函数
+void ModTitle(Position P,List L)
+{
+	char c[20]; 
+	printf("\n请输入新的职工职称:  ");  
+	scanf("%s",c);   
+	strcpy(P->Title,c);           
+	Save(L);             //调用信息保存函数
+	TurnBack();          //调用返回上一菜单函数
+	return;              //退出并返回上一级菜单
+}
+ 
+//入厂时间修改函数
+void ModTime(Position P,List L)
+{
+	char c[20]; 
+	printf("\n请输入新的入厂时间(格式为:年/月/日):  ");  
+	scanf("%s",c);   
+	strcpy(P->time,c);           
+	Save(L);             //调用信息保存函数
+	TurnBack();          //调用返回上一菜单函数
+	return;              //退出并返回上一级菜单
+}
+ 
+//职工工资修改函数
+void Modmoney(Position P,List L)
+{
+	int b; 
+	printf("\n请输入新的职工工资(单位:元):  ");  
+	scanf("%d",&b);   
+	P->money=b;           
+	Save(L);             //调用信息保存函数
+	TurnBack();          //调用返回上一菜单函数
+	return;              //退出并返回上一级菜单
+}
+ 
+/*********************************删除函数**********************************************/
+ 
+//删除函数
+void Delete(List L)
+{
+	while(1)
+	{
+		char a;
+		system("cls");                    //实现清屏
+		DeleteMeun();                     //调用删除菜单
+		fflush(stdin);                    //清除键盘缓冲区
+		a=Test1(getchar(),'1','3');       //调用菜单输入检测函数
+		switch(a)
+		{
+		case '1':	system("cls");  DeleteNum(L);   break;   //职工号删除
+		case '2':	system("cls");  DeleteName(L);  break;   //职工姓名删除
+		case '3':	return;
+		}
+	}
+}
+ 
+//职工号删除函数
+void DeleteNum(List L)
+{
+	Position P,TmpCell;
+	int number;
+	printf("\n请输入所要修改的职工信息的职工号:  ");
+	scanf("%d",&number);
+	P=FindNumPrevious(number,L);	 //调用职工号前驱指针查找函数,获得所需显示结点的前一结点
+	if(IsLast(P,L)==1)               //判断是否存在该员工
+		printf("\n无职工号为 %d 的员工!!!\n\n删除失败!!!\n\n",number);
+	else
+	{
+		PrintEmployee(P->Next);      //调用职工信息打印函数
+		fflush(stdin);                   //清除键盘缓冲区
+		printf("\n是否确认要删除？回复'Y'/'N'\n");
+		if(getchar()=='Y')
+		{
+			TmpCell=P->Next;
+			P->Next=TmpCell->Next;  
+			free(TmpCell);
+			printf("\n删除成功!!!\n\n");
+			Save(L);                     //调用信息保存函数
+		}
+	}
+	TurnBack();                      //调用返回上一菜单函数
+	return;                          //退出并返回上一级菜单
+}
+ 
+//职工姓名删除函数
+void DeleteName(List L)
+{
+	Position P,TmpCell;
+	char name[20];
+	printf("请输入所要查询的职工姓名:  ");
+	scanf("%s",name);
+	P=FindNamePrevious(name,L);	    //调用职工号前驱指针查找函数,获得所需显示结点的前一结点
+	if(IsLast(P,L))                 //判断是否存在该员工
+		printf("\n无姓名为 %s 的员工!!!\n\n删除失败!!!\n\n",name);
+	else
+	{
+		PrintEmployee(P->Next);     //调用职工信息打印函数
+		fflush(stdin);                   //清除键盘缓冲区
+		printf("\n是否确认要删除？回复'Y'/'N'\n");
+		if(getchar()=='Y')
+		{
+			TmpCell=P->Next;
+			P->Next=TmpCell->Next;  
+			free(TmpCell);
+			printf("\n删除成功!!!\n\n");
+			Save(L);                     //调用信息保存函数
+		}
+	}
+	TurnBack();                      //调用返回上一菜单函数
+	return;                          //退出并返回上一级菜单
+}
+ 
+/*********************************打印函数**********************************************/
+ 
+//职工信息打印函数
+void PrintEmployee(Position P)
+{
+	printf("\n该职工信息如下:\n");
+	printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	printf("  职工号    姓名     工作部门      职称         入厂时间      工资      \n"); 
+	printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+	printf("   %-d\t   %-s      %-s       %-s  \t%-s       %-d\n",P->num,P->name,P->department,P->Title,P->time,P->money);
+	printf("\n\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+}
+ 
+/*********************************检测函数**********************************************/
+ 
+//菜单输入检测函数
+char Test1(char a,char b,char c)
+{
+	while(a<b||a>c)
+	{
+		printf("\n\t\t\t输入错误，请重新输入: ");
+	    fflush(stdin);                           //清除键盘缓冲区
+		a=getchar();
+	}
+	return a;
+}
+ 
+//返回上一菜单函数
+void TurnBack()
+{
+	printf("按回车键返回上一菜单...");
+	fflush(stdin);                                       //清除键盘缓冲区
+	getchar();                                           //读取任意按键值
+	system("cls");                                       //实现清屏
+}
